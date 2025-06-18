@@ -73,8 +73,8 @@ RUN mkdir -p /app_template/.devcontainer && \
   envsubst '${LAMBDA_TARGET_NAME}' < /app_template_raw/src/main.cpp.in > /app_template/src/main.cpp && \
   envsubst '${LAMBDA_TARGET_NAME}' < /app_template_raw/.devcontainer/devcontainer.json.in > /app_template/.devcontainer/devcontainer.json && \
   cp /app_template_raw/.gitignore.in /app_template/.gitignore && \
-  cp /app_template_raw/policies/trust-policy.json /app_template/policies/trust-policy.json && \
-  cp /app_template_raw/policies/data-io-policy.json /app_template/policies/data-io-policy.json 
+  cp /app_template_raw/policies/trust-policy.json.in /app_template/policies/trust-policy.json && \
+  cp /app_template_raw/policies/data-io-policy.json.in /app_template/policies/data-io-policy.json 
 
 # --- Entrypoint Script ---
 # Copy the entrypoint script from its new nested location
