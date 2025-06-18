@@ -10,6 +10,7 @@ ARG DCMAKE_BUILD_TYPE=Release
 ARG LAMBDA_TARGET_NAME
 
 # Set environment variables for the build process
+# We list the variables that envsubst will use
 ENV CA_CERT_URL=${CA_CERT_URL} \
   CC=${CC} \
   CXX=${CXX} \
@@ -18,6 +19,7 @@ ENV CA_CERT_URL=${CA_CERT_URL} \
   LAMBDA_TARGET_NAME=${LAMBDA_TARGET_NAME}
 
 # --- System Setup & Dependencies ---
+# gettext provides the 'envsubst' utility
 RUN dnf -y groupinstall "Development Tools" && \
   dnf -y install \
   curl \
@@ -30,12 +32,12 @@ RUN dnf -y groupinstall "Development Tools" && \
   zlib-devel \
   openssl-devel \
   libpq-devel \
+  gettext \
   --allowerasing && \
   dnf clean all
 
 # --- Certificate Authority Setup ---
-WORKDIR /opt
-RUN mkdir -p rds-ca && \
+RUN mkdir -p /opt/rds-ca && \
   curl -o /opt/rds-ca/rds-ca-root.pem ${CA_CERT_URL}
 
 # --- AWS SDK Installation ---
@@ -56,139 +58,22 @@ RUN git clone --depth 1 https://github.com/awslabs/aws-lambda-cpp.git && \
   make && make install && rm -rf /tmp/aws-lambda-cpp
 
 # --- Create Project Template ---
-# Create the project skeleton in a template directory.
-# This now includes the .devcontainer directory for VS Code.
-RUN mkdir -p /app_template/src && \
+# Copy the entire local templates/ directory into the image
+COPY templates/ /app_template_raw/
+
+# Process the templates with envsubst to substitute variables
+RUN mkdir -p /app_template/.devcontainer && \
+  mkdir -p /app_template/src && \
   mkdir -p /app_template/build && \
-  mkdir -p /app_template/.devcontainer
-
-# Create a starter CMakeLists.txt file in the template directory
-RUN cat <<EOF > /app_template/CMakeLists.txt
-# CMake configuration for a new AWS Lambda C++ project
-cmake_minimum_required(VERSION 3.10)
-project(${LAMBDA_TARGET_NAME}_Project CXX)
-
-set(CMAKE_CXX_STANDARD ${CPP_VERSION})
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-find_package(aws-lambda-cpp REQUIRED)
-find_package(AWSSDK REQUIRED COMPONENTS s3 core secretsmanager rds lambda dynamodb sqs sns sts)
-find_package(PostgreSQL REQUIRED)
-
-add_executable(${LAMBDA_TARGET_NAME} src/main.cpp)
-
-target_link_libraries(${LAMBDA_TARGET_NAME} PRIVATE
-    aws-lambda-cpp
-    AWSSDK::s3 AWSSDK::core AWSSDK::secretsmanager AWSSDK::rds AWSSDK::lambda
-    AWSSDK::dynamodb AWSSDK::sqs AWSSDK::sns AWSSDK::sts
-    PostgreSQL::PostgreSQL
-)
-
-aws_lambda_package_target(${LAMBDA_TARGET_NAME})
-EOF
-
-# Create a starter main.cpp file in the template directory
-RUN cat <<EOF > /app_template/src/main.cpp
-#include <aws/lambda-runtime/runtime.h>
-#include <aws/core/utils/json/JsonSerializer.h>
-#include <aws/core/Aws.h>
-#include <libpq-fe.h>
-#include <cstdlib>
-
-using namespace aws::lambda_runtime;
-
-std::string get_env_var(const char* name) {
-    const char* value = std::getenv(name);
-    return value ? std::string(value) : "";
-}
-
-static invocation_response my_handler(invocation_request const& req)
-{
-    Aws::SDKOptions options;
-    Aws::InitAPI(options);
-    {
-        Aws::Utils::Json::JsonValue json_response;
-        json_response.WithString("executableName", "${LAMBDA_TARGET_NAME}");
-
-        std::string conn_str = "host=" + get_env_var("PG_HOST") +
-                               " port=" + get_env_var("PG_PORT") +
-                               " dbname=" + get_env_var("PG_DBNAME") +
-                               " user=" + get_env_var("PG_USER") +
-                               " password=" + get_env_var("PG_PASSWORD") +
-                               " sslmode=verify-full" +
-                               " sslrootcert=/opt/rds-ca/rds-ca-root.pem";
-
-        PGconn* conn = PQconnectdb(conn_str.c_str());
-
-        if (PQstatus(conn) != CONNECTION_OK) {
-            json_response.WithString("db_connection_status", "Failed");
-            json_response.WithString("db_error", PQerrorMessage(conn));
-        } else {
-            json_response.WithString("db_connection_status", "Success");
-        }
-        
-        if(conn) { PQfinish(conn); }
-
-        Aws::ShutdownAPI(options);
-        return invocation_response::success(
-            json_response.View().WriteCompact(),
-            "application/json"
-        );
-    }
-}
-
-int main()
-{
-    run_handler(my_handler);
-    return 0;
-}
-EOF
-
-# Create the VS Code Dev Container config file in the template directory
-RUN cat <<EOF > /app_template/.devcontainer/devcontainer.json
-{
-  "name": "C++ Lambda (\${LAMBDA_TARGET_NAME})",
-  "image": "\${LAMBDA_TARGET_NAME}-base",
-  "runArgs": [
-    "--volume=\${localWorkspaceFolder}:/app"
-  ],
-  "workspaceFolder": "/app",
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-vscode.cpptools-extension-pack"
-      ],
-      "settings": {
-        "C_Cpp.default.includePath": [
-          "\${workspaceFolder}/**",
-          "/usr/local/include",
-          "/usr/include"
-        ]
-      }
-    }
-  }
-}
-EOF
+  export $(cat /proc/1/environ | tr '\0' '\n' | grep -E '^(LAMBDA_TARGET_NAME|CPP_VERSION)') && \
+  # Process templates from their new nested locations
+  envsubst < /app_template_raw/CMakeLists.txt.in > /app_template/CMakeLists.txt && \
+  envsubst < /app_template_raw/src/main.cpp.in > /app_template/src/main.cpp && \
+  envsubst < /app_template_raw/.devcontainer/devcontainer.json.in > /app_template/.devcontainer/devcontainer.json
 
 # --- Entrypoint Script ---
-RUN cat <<EOF > /entrypoint.sh
-#!/bin/sh
-set -e
-# Check if CMakeLists.txt does NOT exist in the /app directory.
-if [ ! -f "/app/CMakeLists.txt" ]; then
-   echo "CMakeLists.txt not found. Initializing project from template..."
-   # Copy the template files into the mounted volume.
-   cp -r /app_template/. /app/
-else
-   echo "Existing CMakeLists.txt found. Skipping initialization."
-fi
-
-# Execute the command passed to the container (e.g., /bin/bash)
-exec "\$@"
-EOF
-
-# Make the entrypoint script executable
-RUN chmod +x /entrypoint.sh
+# Copy the entrypoint script from its new nested location
+COPY --chmod=755 templates/scripts/entrypoint.sh /entrypoint.sh
 
 # Set the final working directory and the entrypoint/cmd
 WORKDIR /app

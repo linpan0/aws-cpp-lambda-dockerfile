@@ -1,0 +1,53 @@
+#include <aws/lambda-runtime/runtime.h>
+#include <aws/core/utils/json/JsonSerializer.h>
+#include <aws/core/Aws.h>
+#include <libpq-fe.h>
+#include <cstdlib>
+
+using namespace aws::lambda_runtime;
+
+std::string get_env_var(const char* name) {
+    const char* value = std::getenv(name);
+    return value ? std::string(value) : "";
+}
+
+static invocation_response my_handler(invocation_request const& req)
+{
+    Aws::SDKOptions options;
+    Aws::InitAPI(options);
+    {
+        Aws::Utils::Json::JsonValue json_response;
+        json_response.WithString("executableName", "${LAMBDA_TARGET_NAME}");
+
+        std::string conn_str = "host=" + get_env_var("PG_HOST") +
+                               " port=" + get_env_var("PG_PORT") +
+                               " dbname=" + get_env_var("PG_DBNAME") +
+                               " user=" + get_env_var("PG_USER") +
+                               " password=" + get_env_var("PG_PASSWORD") +
+                               " sslmode=verify-full" +
+                               " sslrootcert=/opt/rds-ca/rds-ca-root.pem";
+
+        PGconn* conn = PQconnectdb(conn_str.c_str());
+
+        if (PQstatus(conn) != CONNECTION_OK) {
+            json_response.WithString("db_connection_status", "Failed");
+            json_response.WithString("db_error", PQerrorMessage(conn));
+        } else {
+            json_response.WithString("db_connection_status", "Success");
+        }
+        
+        if(conn) { PQfinish(conn); }
+
+        Aws::ShutdownAPI(options);
+        return invocation_response::success(
+            json_response.View().WriteCompact(),
+            "application/json"
+        );
+    }
+}
+
+int main()
+{
+    run_handler(my_handler);
+    return 0;
+}
