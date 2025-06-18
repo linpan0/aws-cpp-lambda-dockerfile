@@ -23,6 +23,12 @@ docker run -it --rm -v $(pwd):/app ${PROJECT_NAME}
 - `-v $(pwd):/app`: This is the most important flag. It creates a volume, which is a live, two-way link between your current directory on your Mac (`$(pwd)`) and the `/app` directory inside the container.
 - `${PROJECT_NAME}`: Specifies which image to use for the container.
 
+# Delete Builder Files
+
+```bash
+rm -f Dockerfile && rm -rf templates
+```
+
 # Connect VSCode
 
 ```bash
