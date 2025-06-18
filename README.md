@@ -2,6 +2,7 @@
 ```bash
 cd ${PROJECT_DIRECTORY_SUB_FOLDER} # e.g. /dev
 git clone https://github.com/linpan0/aws-cpp-lambda-dockerfile.git ${PROJECT_NAME}
+cd ${PROJECT_NAME}
 docker build . --build-arg LAMBDA_TARGET_NAME="${PROJECT_NAME}" -t ${PROJECT_NAME}
 ```
 
