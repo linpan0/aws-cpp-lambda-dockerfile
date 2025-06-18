@@ -1,21 +1,13 @@
 {
   "name": "C++ Lambda (${LAMBDA_TARGET_NAME})",
-  "image": "${LAMBDA_TARGET_NAME}-base",
-  "runArgs": [
-    "--volume=${localWorkspaceFolder}:/app"
-  ],
+  "image": "${LAMBDA_TARGET_NAME}",
+  "runArgs": ["--volume=\${localWorkspaceFolder}:/app"],
   "workspaceFolder": "/app",
   "customizations": {
     "vscode": {
-      "extensions": [
-        "ms-vscode.cpptools-extension-pack"
-      ],
+      "extensions": ["ms-vscode.cpptools-extension-pack"],
       "settings": {
-        "C_Cpp.default.includePath": [
-          "${workspaceFolder}/**",
-          "/usr/local/include",
-          "/usr/include"
-        ]
+        "C_Cpp.default.includePath": ["\${workspaceFolder}/**", "/usr/local/include", "/usr/include"]
       }
     }
   }
