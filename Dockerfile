@@ -61,15 +61,15 @@ RUN git clone --depth 1 https://github.com/awslabs/aws-lambda-cpp.git && \
 # Copy the entire local templates/ directory into the image
 COPY templates/ /app_template_raw/
 
-# Process the templates with envsubst to substitute variables
+# Process the templates with envsubst and copy the gitignore file
 RUN mkdir -p /app_template/.devcontainer && \
   mkdir -p /app_template/src && \
   mkdir -p /app_template/build && \
   export $(cat /proc/1/environ | tr '\0' '\n' | grep -E '^(LAMBDA_TARGET_NAME|CPP_VERSION)') && \
-  # Process templates from their new nested locations
   envsubst < /app_template_raw/CMakeLists.txt.in > /app_template/CMakeLists.txt && \
   envsubst < /app_template_raw/src/main.cpp.in > /app_template/src/main.cpp && \
-  envsubst < /app_template_raw/.devcontainer/devcontainer.json.in > /app_template/.devcontainer/devcontainer.json
+  envsubst < /app_template_raw/.devcontainer/devcontainer.json.in > /app_template/.devcontainer/devcontainer.json && \
+  cp /app_template_raw/.gitignore.in /app_template/.gitignore
 
 # --- Entrypoint Script ---
 # Copy the entrypoint script from its new nested location

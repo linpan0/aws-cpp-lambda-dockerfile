@@ -1,0 +1,15 @@
+# Ignore build artifacts from the container
+/build/
+*.zip
+
+# Ignore local VS Code settings that might contain user-specific paths
+.vscode/
+
+# Ignore macOS specific system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Ignore temporary files created by the builder
+Dockerfile
+/templates/
