@@ -69,12 +69,13 @@ COPY templates/ /app_template_raw/
 RUN mkdir -p /app_template/.devcontainer && \
   mkdir -p /app_template/src && \
   mkdir -p /app_template/build && \
+  mkdir -p /app_template/policies && \
   envsubst '${LAMBDA_TARGET_NAME} ${CPP_VERSION}' < /app_template_raw/CMakeLists.txt.in > /app_template/CMakeLists.txt && \
   envsubst '${LAMBDA_TARGET_NAME}' < /app_template_raw/src/main.cpp.in > /app_template/src/main.cpp && \
   envsubst '${LAMBDA_TARGET_NAME}' < /app_template_raw/.devcontainer/devcontainer.json.in > /app_template/.devcontainer/devcontainer.json && \
   cp /app_template_raw/.gitignore.in /app_template/.gitignore && \
   cp /app_template_raw/policies/trust-policy.json.in /app_template/policies/trust-policy.json && \
-  cp /app_template_raw/policies/data-io-policy.json.in /app_template/policies/data-io-policy.json 
+  cp /app_template_raw/policies/data-io-policy.json.in /app_template/policies/data-io-policy.json
 
 # --- Entrypoint Script ---
 # Copy the entrypoint script from its new nested location
