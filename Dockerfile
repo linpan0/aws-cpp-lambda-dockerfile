@@ -46,7 +46,7 @@ RUN git clone --depth 1 https://github.com/aws/aws-sdk-cpp.git && \
   cd aws-sdk-cpp && \
   git submodule update --init --recursive && \
   mkdir build && cd build && \
-  cmake .. -DBUILD_ONLY="s3;core;secretsmanager;rds;lambda;dynamodb;sqs;sns;sts" \
+  cmake .. -DBUILD_ONLY="s3;core;secretsmanager;rds;lambda" \
   -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
   -DCMAKE_INSTALL_PREFIX=/usr/local && \
   make -j $(nproc) && make install && rm -rf /tmp/aws-sdk-cpp
