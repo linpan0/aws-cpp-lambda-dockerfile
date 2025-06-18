@@ -57,7 +57,10 @@ RUN git clone --depth 1 https://github.com/awslabs/aws-lambda-cpp.git && \
 
 # --- Create Project Template ---
 # Create the project skeleton in a template directory.
-RUN mkdir -p /app_template/src && mkdir -p /app_template/build
+# This now includes the .devcontainer directory for VS Code.
+RUN mkdir -p /app_template/src && \
+  mkdir -p /app_template/build && \
+  mkdir -p /app_template/.devcontainer
 
 # Create a starter CMakeLists.txt file in the template directory
 RUN cat <<EOF > /app_template/CMakeLists.txt
@@ -141,12 +144,36 @@ int main()
 }
 EOF
 
+# Create the VS Code Dev Container config file in the template directory
+RUN cat <<EOF > /app_template/.devcontainer/devcontainer.json
+{
+  "name": "C++ Lambda (\${LAMBDA_TARGET_NAME})",
+  "image": "\${LAMBDA_TARGET_NAME}-base",
+  "runArgs": [
+    "--volume=\${localWorkspaceFolder}:/app"
+  ],
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools-extension-pack"
+      ],
+      "settings": {
+        "C_Cpp.default.includePath": [
+          "\${workspaceFolder}/**",
+          "/usr/local/include",
+          "/usr/include"
+        ]
+      }
+    }
+  }
+}
+EOF
+
 # --- Entrypoint Script ---
-# This script uses a more robust check to see if the project needs to be initialized.
 RUN cat <<EOF > /entrypoint.sh
 #!/bin/sh
 set -e
-
 # Check if CMakeLists.txt does NOT exist in the /app directory.
 if [ ! -f "/app/CMakeLists.txt" ]; then
    echo "CMakeLists.txt not found. Initializing project from template..."
