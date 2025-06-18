@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD ${CPP_VERSION})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(aws-lambda-cpp REQUIRED)
-find_package(AWSSDK REQUIRED COMPONENTS s3 core secretsmanager rds lambda dynamodb sqs sns sts)
+find_package(AWSSDK REQUIRED COMPONENTS s3 core secretsmanager rds lambda)
 find_package(PostgreSQL REQUIRED)
 
 add_executable(${LAMBDA_TARGET_NAME} src/main.cpp)
@@ -14,7 +14,6 @@ add_executable(${LAMBDA_TARGET_NAME} src/main.cpp)
 target_link_libraries(${LAMBDA_TARGET_NAME} PRIVATE
     aws-lambda-cpp
     AWSSDK::s3 AWSSDK::core AWSSDK::secretsmanager AWSSDK::rds AWSSDK::lambda
-    AWSSDK::dynamodb AWSSDK::sqs AWSSDK::sns AWSSDK::sts
     PostgreSQL::PostgreSQL
 )
 

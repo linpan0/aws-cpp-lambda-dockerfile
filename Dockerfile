@@ -36,6 +36,10 @@ RUN dnf -y groupinstall "Development Tools" && \
   --allowerasing && \
   dnf clean all
 
+# --- Shell Customization ---
+# Create a .bashrc for the root user to provide a more user-friendly shell prompt.
+RUN echo "export PS1='[\u@\h \W]\\$ '" >> /root/.bashrc
+
 # --- Certificate Authority Setup ---
 RUN mkdir -p /opt/rds-ca && \
   curl -o /opt/rds-ca/rds-ca-root.pem ${CA_CERT_URL}
@@ -68,7 +72,9 @@ RUN mkdir -p /app_template/.devcontainer && \
   envsubst '${LAMBDA_TARGET_NAME} ${CPP_VERSION}' < /app_template_raw/CMakeLists.txt.in > /app_template/CMakeLists.txt && \
   envsubst '${LAMBDA_TARGET_NAME}' < /app_template_raw/src/main.cpp.in > /app_template/src/main.cpp && \
   envsubst '${LAMBDA_TARGET_NAME}' < /app_template_raw/.devcontainer/devcontainer.json.in > /app_template/.devcontainer/devcontainer.json && \
-  cp /app_template_raw/.gitignore.in /app_template/.gitignore
+  cp /app_template_raw/.gitignore.in /app_template/.gitignore && \
+  cp /app_template_raw/policies/trust-policy.json /app_template/policies/trust-policy.json && \
+  cp /app_template_raw/policies/data-io-policy.json /app_template/policies/data-io-policy.json 
 
 # --- Entrypoint Script ---
 # Copy the entrypoint script from its new nested location
