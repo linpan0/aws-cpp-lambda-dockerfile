@@ -59,3 +59,50 @@ aws iam put-role-policy \
 ```
 
 # Deployment
+
+- Run these commands in the Docker bash environment!
+
+```bash
+cd ${PROJECT_DIRECTORY}/build
+# Compiles the program.
+make ${PROJECT_NAME}
+# Create the deployment package
+make aws-lambda-package-${PROJECT_NAME}
+```
+
+# Create/Update Lambda Function
+
+## Create Function
+
+- Run these commands in ${PROJECT_NAME}/build
+
+```bash
+aws lambda create-function \
+  --function-name ${PROJECT_NAME} \
+  --runtime provided.al2023 \
+  --handler ${PROJECT_NAME} \
+  --memory-size 512 \
+  --timeout 15 \
+  --role ${YOUR_IAM_ROLE_ARN} \
+  --zip-file fileb://${PROJECT_NAME}.zip
+```
+
+## Update Function
+
+```bash
+aws lambda update-function-code \
+  --function-name ${PROJECT_NAME} \
+  --zip-file fileb://${PROJECT_NAME}.zip
+```
+
+# Executing Lambda Function
+
+```bash
+aws lambda invoke \
+  --function-name my-cpp-s3-uploader \
+  --cli-binary-format raw-in-base64-out \
+  --payload '{"bucketName": "your-unique-bucket-name-12345", "keyName": "hello-from-lambda.txt", "fileContent": "This is a test file from C++ Lambda!"}' \
+  output.json
+```
+
+TODO: The deploying probably needs to be done on Docker or something because the Lambda function is either x86 or ARM, and it defaults to x86. Or maybe in create-function, [--architectures <value>]?  https://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html
