@@ -69,9 +69,9 @@ aws iam put-role-policy \
 
 # Deployment
 
-- Run these commands in the Docker bash environment!
-
 ## 1. Compile and Create the Deployment Package
+
+- Run these commands in the Docker bash environment!
 
 ```bash
 cd ${PROJECT_DIRECTORY}/build
