@@ -79,9 +79,9 @@ make ${PROJECT_NAME}
 make aws-lambda-package-${PROJECT_NAME}
 ```
 
-# 1. Create/Update Lambda Function
+## 1. Create/Update Lambda Function
 
-## 1a. Create Function
+### 1a. Create Function
 
 - Run these commands in ${PROJECT_NAME}/build
 
@@ -98,7 +98,7 @@ aws lambda create-function \
   --architectures ${x86_64 or arm64}
 ```
 
-## 1b. Update Function
+### 1b. Update Function
 
 ```bash
 # Run these commands in the Docker bash environment!
@@ -112,7 +112,7 @@ aws lambda update-function-code \
   --zip-file fileb://${PROJECT_NAME}.zip
 ```
 
-# 2. Executing Lambda Function
+# Executing Lambda Function
 
 ```bash
 aws lambda invoke \
