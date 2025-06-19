@@ -102,6 +102,7 @@ aws lambda update-function-code \
 ```bash
 aws lambda invoke \
   --cli-binary-format raw-in-base64-out \
+  --region us-east-1 \
   --payload '{"key1": "value1", "key2": "value2"}' \
   --function-name ${PROJECT_NAME} \
   output.json
