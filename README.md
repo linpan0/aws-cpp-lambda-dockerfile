@@ -78,13 +78,15 @@ make aws-lambda-package-${PROJECT_NAME}
 
 ```bash
 aws lambda create-function \
-  --function-name ${PROJECT_NAME} \
+  --region us-east-1 \
   --runtime provided.al2023 \
   --handler ${PROJECT_NAME} \
   --memory-size 512 \
   --timeout 15 \
   --role ${YOUR_IAM_ROLE_ARN} \
-  --zip-file fileb://${PROJECT_NAME}.zip
+  --zip-file fileb://${PROJECT_NAME}.zip \
+  --function-name ${PROJECT_NAME} \
+  --architectures ${x86_64 or ARM}
 ```
 
 ## Update Function
@@ -105,4 +107,4 @@ aws lambda invoke \
   output.json
 ```
 
-TODO: The deploying probably needs to be done on Docker or something because the Lambda function is either x86 or ARM, and it defaults to x86. Or maybe in create-function, [--architectures <value>]?  https://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html
+TODO: The deploying probably needs to be done on Docker or something because the Lambda function is either x86 or ARM, and it defaults to x86. Or maybe in create-function, [--architectures <value>]? https://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html

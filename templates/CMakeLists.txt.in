@@ -1,4 +1,3 @@
-# CMake configuration for a new AWS Lambda C++ project
 cmake_minimum_required(VERSION 3.10)
 project(${LAMBDA_TARGET_NAME} CXX)
 
