@@ -71,6 +71,8 @@ aws iam put-role-policy \
 
 - Run these commands in the Docker bash environment!
 
+## 1. Compile and Create the Deployment Package
+
 ```bash
 cd ${PROJECT_DIRECTORY}/build
 # Compiles the program.
@@ -79,9 +81,9 @@ make ${PROJECT_NAME}
 make aws-lambda-package-${PROJECT_NAME}
 ```
 
-## 1. Create/Update Lambda Function
+## 2. Create/Update Lambda Function
 
-### 1a. Create Function
+### 2a. Create Function
 
 - Run these commands in ${PROJECT_NAME}/build
 
@@ -98,7 +100,7 @@ aws lambda create-function \
   --architectures ${x86_64 or arm64}
 ```
 
-### 1b. Update Function
+### 2b. Update Function
 
 ```bash
 # Run these commands in the Docker bash environment!
