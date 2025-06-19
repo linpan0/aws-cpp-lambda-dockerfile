@@ -2,17 +2,20 @@
 cmake_minimum_required(VERSION 3.10)
 project(${LAMBDA_TARGET_NAME}_Project CXX)
 
+# Add /usr/local to CMake's search path to find our custom-built libraries
+list(APPEND CMAKE_PREFIX_PATH "/usr/local")
+
 set(CMAKE_CXX_STANDARD ${CPP_VERSION})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(aws-lambda-cpp REQUIRED)
+find_package(aws-lambda-runtime REQUIRED)
 find_package(AWSSDK REQUIRED COMPONENTS s3 core secretsmanager rds lambda)
 find_package(PostgreSQL REQUIRED)
 
 add_executable(${LAMBDA_TARGET_NAME} src/main.cpp)
 
 target_link_libraries(${LAMBDA_TARGET_NAME} PRIVATE
-    aws-lambda-cpp
+    aws-lambda-runtime
     AWSSDK::s3 AWSSDK::core AWSSDK::secretsmanager AWSSDK::rds AWSSDK::lambda
     PostgreSQL::PostgreSQL
 )

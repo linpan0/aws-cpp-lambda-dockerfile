@@ -10,6 +10,7 @@ ARG DCMAKE_BUILD_TYPE=Release
 ARG LAMBDA_TARGET_NAME
 
 # Set environment variables for the build process
+# We list the variables that envsubst will use
 ENV CA_CERT_URL=${CA_CERT_URL} \
   CC=${CC} \
   CXX=${CXX} \
@@ -18,6 +19,7 @@ ENV CA_CERT_URL=${CA_CERT_URL} \
   LAMBDA_TARGET_NAME=${LAMBDA_TARGET_NAME}
 
 # --- System Setup & Dependencies ---
+# gettext provides the 'envsubst' utility
 RUN dnf -y groupinstall "Development Tools" && \
   dnf -y install \
   curl \
@@ -35,6 +37,7 @@ RUN dnf -y groupinstall "Development Tools" && \
   dnf clean all
 
 # --- Shell Customization ---
+# Create a .bashrc for the root user to provide a more user-friendly shell prompt.
 RUN echo "export PS1='[\u@\h \W]\\$ '" >> /root/.bashrc
 
 # --- Certificate Authority Setup ---
@@ -42,33 +45,27 @@ RUN mkdir -p /opt/rds-ca && \
   curl -o /opt/rds-ca/rds-ca-root.pem ${CA_CERT_URL}
 
 # --- AWS SDK Installation ---
-# WORKDIR /tmp
-# RUN git clone --depth 1 https://github.com/aws/aws-sdk-cpp.git && \
-#   cd aws-sdk-cpp && \
-#   git submodule update --init --recursive && \
-#   mkdir build && cd build && \
-#   cmake .. -DBUILD_ONLY="s3;core;secretsmanager;rds;lambda" \
-#   -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
-#   -DCMAKE_INSTALL_PREFIX=/usr/local && \
-#   make -j $(nproc) && make install
-
-# --- AWS Lambda C++ Runtime Installation (Corrected and Final Version) ---
-# Consolidating all steps into a single RUN command for reliability.
 WORKDIR /tmp
-RUN git clone --depth 1 https://github.com/awslabs/aws-lambda-cpp.git && \
-  cd aws-lambda-cpp && \
-  mkdir build && \
-  cd build && \
-  cmake .. -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+RUN git clone --depth 1 https://github.com/aws/aws-sdk-cpp.git && \
+  cd aws-sdk-cpp && \
+  git submodule update --init --recursive && \
+  mkdir build && cd build && \
+  cmake .. -DBUILD_ONLY="s3;core;secretsmanager;rds;lambda" \
+  -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
   -DCMAKE_INSTALL_PREFIX=/usr/local && \
-  make && \
-  make install
+  make -j $(nproc) && make install && rm -rf /tmp/aws-sdk-cpp
+
+RUN git clone --depth 1 https://github.com/awslabs/aws-lambda-cpp.git && \
+  cd aws-lambda-cpp && mkdir build && cd build && \
+  cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+  -DCMAKE_INSTALL_PREFIX=/usr/local && \
+  make && make install && rm -rf /tmp/aws-lambda-cpp
 
 # --- Create Project Template ---
+# Copy the entire local templates/ directory into the image
 COPY templates/ /app_template_raw/
 
-# Process the templates and copy static files
+# Process the templates with envsubst and copy the gitignore file
 RUN mkdir -p /app_template/.devcontainer && \
   mkdir -p /app_template/src && \
   mkdir -p /app_template/build && \
@@ -81,6 +78,7 @@ RUN mkdir -p /app_template/.devcontainer && \
   cp /app_template_raw/policies/data-io-policy.json.in /app_template/policies/data-io-policy.json
 
 # --- Entrypoint Script ---
+# Copy the entrypoint script from its new nested location
 COPY --chmod=755 templates/scripts/entrypoint.sh /entrypoint.sh
 
 # Set the final working directory and the entrypoint/cmd
