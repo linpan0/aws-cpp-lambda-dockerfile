@@ -80,13 +80,13 @@ make aws-lambda-package-${PROJECT_NAME}
 aws lambda create-function \
   --region us-east-1 \
   --runtime provided.al2023 \
-  --handler ${PROJECT_NAME} \
   --memory-size 512 \
   --timeout 15 \
   --role ${YOUR_IAM_ROLE_ARN} \
+  --handler ${PROJECT_NAME} \
   --zip-file fileb://${PROJECT_NAME}.zip \
   --function-name ${PROJECT_NAME} \
-  --architectures ${x86_64 or ARM}
+  --architectures ${x86_64 or arm64}
 ```
 
 ## Update Function
@@ -101,9 +101,9 @@ aws lambda update-function-code \
 
 ```bash
 aws lambda invoke \
-  --function-name my-cpp-s3-uploader \
+  --function-name ${PROJECT_NAME} \
   --cli-binary-format raw-in-base64-out \
-  --payload '{"bucketName": "your-unique-bucket-name-12345", "keyName": "hello-from-lambda.txt", "fileContent": "This is a test file from C++ Lambda!"}' \
+  --payload '{"bucketName": "your-unique-bucket-name-12345", "keyName": "hello-from-lambda.txt"}' \
   output.json
 ```
 
