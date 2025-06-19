@@ -40,22 +40,22 @@ code .
 ### Create IAM Role
 
 ```bash
-aws iam create-role --role-name ${ROLE_NAME} --assume-role-policy-document file://policies/trust-policy.json
+aws iam create-role --assume-role-policy-document file://policies/trust-policy.json --role-name ${ROLE_NAME}
 ```
 
 ### Attach Inline Lambda Execution Policy
 
 ```bash
-aws iam attach-role-policy --role-name ${ROLE_NAME} --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole --role-name ${ROLE_NAME}
 ```
 
 ### Attach Custom Permission Policy
 
 ```bash
 aws iam put-role-policy \
-    --role-name ${ROLE_NAME} \
     --policy-name Data-IO-Policy \
-    --policy-document file://policies/data-io-policy.json
+    --policy-document file://policies/data-io-policy.json \
+    --role-name ${ROLE_NAME}
 ```
 
 # Deployment
@@ -101,10 +101,8 @@ aws lambda update-function-code \
 
 ```bash
 aws lambda invoke \
-  --function-name ${PROJECT_NAME} \
   --cli-binary-format raw-in-base64-out \
-  --payload '{"bucketName": "your-unique-bucket-name-12345", "keyName": "hello-from-lambda.txt"}' \
+  --payload '{"key1": "value1", "key2": "value2"}' \
+  --function-name ${PROJECT_NAME} \
   output.json
 ```
-
-TODO: The deploying probably needs to be done on Docker or something because the Lambda function is either x86 or ARM, and it defaults to x86. Or maybe in create-function, [--architectures <value>]? https://docs.aws.amazon.com/cli/latest/reference/lambda/create-function.html
