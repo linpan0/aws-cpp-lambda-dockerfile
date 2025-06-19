@@ -11,7 +11,7 @@ docker build . --build-arg LAMBDA_TARGET_NAME="${PROJECT_NAME}" -t ${PROJECT_NAM
 
 - `docker build .`: This tells Docker to **build** a new image using the `Dockerfile` found in the current directory (`.`).
 - `--build-arg LAMBDA_TARGET_NAME="${PROJECT_NAME}"`: This passes a variable into the build process. It customizes the project skeleton that will be created inside the image, naming your application `${PROJECT_NAME}`.
-- `-t my-first-lambda-base`: This tags (names) the finished image `${PROJECT_NAME}` so you can easily find and use it later.
+- `-t ${PROJECT_NAME}`: This tags (names) the finished image `${PROJECT_NAME}` so you can easily find and use it later.
 
 ## Setup Lambda Project
 
