@@ -42,21 +42,22 @@ RUN mkdir -p /opt/rds-ca && \
   curl -o /opt/rds-ca/rds-ca-root.pem ${CA_CERT_URL}
 
 # --- AWS SDK Installation ---
-WORKDIR /tmp
-RUN git clone --depth 1 https://github.com/aws/aws-sdk-cpp.git && \
-  cd aws-sdk-cpp && \
-  git submodule update --init --recursive && \
-  mkdir build && cd build && \
-  cmake .. -DBUILD_ONLY="s3;core;secretsmanager;rds;lambda" \
-  -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
-  -DCMAKE_INSTALL_PREFIX=/usr/local && \
-  make -j $(nproc) && make install
+# WORKDIR /tmp
+# RUN git clone --depth 1 https://github.com/aws/aws-sdk-cpp.git && \
+#   cd aws-sdk-cpp && \
+#   git submodule update --init --recursive && \
+#   mkdir build && cd build && \
+#   cmake .. -DBUILD_ONLY="s3;core;secretsmanager;rds;lambda" \
+#   -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
+#   -DCMAKE_INSTALL_PREFIX=/usr/local && \
+#   make -j $(nproc) && make install
 
-# --- AWS Lambda C++ Runtime Installation ---
+# --- AWS Lambda C++ Runtime Installation (Corrected and Final Version) ---
+# Consolidating all steps into a single RUN command for reliability.
 WORKDIR /tmp
-RUN git clone --depth 1 https://github.com/awslabs/aws-lambda-cpp.git
-WORKDIR /tmp/aws-lambda-cpp
-RUN mkdir build && \
+RUN git clone --depth 1 https://github.com/awslabs/aws-lambda-cpp.git && \
+  cd aws-lambda-cpp && \
+  mkdir build && \
   cd build && \
   cmake .. -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
