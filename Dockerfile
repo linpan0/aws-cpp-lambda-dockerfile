@@ -1,22 +1,11 @@
-# Use the Amazon Linux 2023 base image
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023
 
 # --- Build-Time Arguments ---
-ARG CA_CERT_URL="https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem"
-ARG CC='gcc'
-ARG CXX='g++'
 ARG CPP_VERSION=17
-ARG DCMAKE_BUILD_TYPE=Release
 ARG LAMBDA_TARGET_NAME
 
 # Set environment variables for the build process
-# We list the variables that envsubst will use
-ENV CA_CERT_URL=${CA_CERT_URL} \
-  CC=${CC} \
-  CXX=${CXX} \
-  CPP_VERSION=${CPP_VERSION} \
-  DCMAKE_BUILD_TYPE=${DCMAKE_BUILD_TYPE} \
-  LAMBDA_TARGET_NAME=${LAMBDA_TARGET_NAME}
+ENV CPP_VERSION=${CPP_VERSION} LAMBDA_TARGET_NAME=${LAMBDA_TARGET_NAME}
 
 # --- System Setup & Dependencies ---
 # gettext provides the 'envsubst' utility
@@ -41,8 +30,7 @@ RUN dnf -y groupinstall "Development Tools" && \
 RUN echo "export PS1='[\u@\h \W]\\$ '" >> /root/.bashrc
 
 # --- Certificate Authority Setup ---
-RUN mkdir -p /opt/rds-ca && \
-  curl -o /opt/rds-ca/rds-ca-root.pem ${CA_CERT_URL}
+RUN mkdir -p /opt/rds-ca && curl -o /opt/rds-ca/rds-ca-root.pem "https://s3.amazonaws.com/rds-downloads/rds-ca-2019-root.pem"
 
 # --- AWS SDK Installation ---
 WORKDIR /tmp
