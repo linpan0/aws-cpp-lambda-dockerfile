@@ -1,11 +1,20 @@
 # Initial Setup
 
-## Setup Docker Image
+## 1. Setup Docker Image
 
 ```bash
 cd ${PROJECT_DIRECTORY_SUB_FOLDER} # e.g. /dev
+```
+
+```bash
 git clone https://github.com/linpan0/aws-cpp-lambda-dockerfile.git ${PROJECT_NAME} && rm -rf ${PROJECT_NAME}/.git
+```
+
+```bash
 cd ${PROJECT_NAME}
+```
+
+```bash
 docker build . --build-arg LAMBDA_TARGET_NAME="${PROJECT_NAME}" -t ${PROJECT_NAME}
 ```
 
@@ -13,7 +22,7 @@ docker build . --build-arg LAMBDA_TARGET_NAME="${PROJECT_NAME}" -t ${PROJECT_NAM
 - `--build-arg LAMBDA_TARGET_NAME="${PROJECT_NAME}"`: This passes a variable into the build process. It customizes the project skeleton that will be created inside the image, naming your application `${PROJECT_NAME}`.
 - `-t ${PROJECT_NAME}`: This tags (names) the finished image `${PROJECT_NAME}` so you can easily find and use it later.
 
-## Setup Lambda Project
+## 2. Setup Lambda Function Project
 
 ```bash
 docker run -it --rm -v $(pwd):/app ${PROJECT_NAME}
@@ -25,7 +34,7 @@ docker run -it --rm -v $(pwd):/app ${PROJECT_NAME}
 - `-v $(pwd):/app`: This is the most important flag. It creates a volume, which is a live, two-way link between your current directory on your Mac (`$(pwd)`) and the `/app` directory inside the container.
 - `${PROJECT_NAME}`: Specifies which image to use for the container.
 
-## Delete Builder Files & Connect VSCode
+## 3. Delete Builder Files & Connect VSCode
 
 ```bash
 cd ${PROJECT_DIRECTORY}
@@ -35,21 +44,21 @@ code .
 
 - VS Code will open and see the `.devcontainer/devcontainer.json` file. A pop-up will appear in the bottom-right corner. Click the **"Reopen in Container"** button.
 
-## Setup IAM Role Permissions
+## 4. Setup IAM Role Permissions
 
-### Create IAM Role
+### 4a. Create IAM Role
 
 ```bash
 aws iam create-role --assume-role-policy-document file://policies/trust-policy.json --role-name ${ROLE_NAME}
 ```
 
-### Attach Inline Lambda Execution Policy
+### 4b. Attach Inline Lambda Execution Policy
 
 ```bash
 aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole --role-name ${ROLE_NAME}
 ```
 
-### Attach Custom Permission Policy
+### 4c. Attach Custom Permission Policy
 
 ```bash
 aws iam put-role-policy \
@@ -70,9 +79,9 @@ make ${PROJECT_NAME}
 make aws-lambda-package-${PROJECT_NAME}
 ```
 
-# Create/Update Lambda Function
+# 1. Create/Update Lambda Function
 
-## Create Function
+## 1a. Create Function
 
 - Run these commands in ${PROJECT_NAME}/build
 
@@ -89,15 +98,21 @@ aws lambda create-function \
   --architectures ${x86_64 or arm64}
 ```
 
-## Update Function
+## 1b. Update Function
 
 ```bash
+# Run these commands in the Docker bash environment!
+cd ${PROJECT_DIRECTORY}/build
+make ${PROJECT_NAME}
+make aws-lambda-package-${PROJECT_NAME}
+
+# Not this one.
 aws lambda update-function-code \
   --function-name ${PROJECT_NAME} \
   --zip-file fileb://${PROJECT_NAME}.zip
 ```
 
-# Executing Lambda Function
+# 2. Executing Lambda Function
 
 ```bash
 aws lambda invoke \
